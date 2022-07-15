@@ -146,11 +146,7 @@ public:
     }
 
     [[nodiscard]] Iterator end() noexcept {
-            Node* prev_node = head_.next_node;
-            while (prev_node != nullptr) {
-                prev_node = prev_node->next_node;
-            }
-        return Iterator(prev_node);
+        return Iterator(nullptr);
     }
 
     [[nodiscard]] ConstIterator begin() const noexcept {
@@ -158,11 +154,7 @@ public:
     }
 
     [[nodiscard]] ConstIterator end() const noexcept {
-        Node* prev_node = head_.next_node;
-        while (prev_node != nullptr) {
-            prev_node = prev_node->next_node;
-        }
-        return ConstIterator(prev_node);
+        return ConstIterator(nullptr);
     }
 
     [[nodiscard]] ConstIterator cbegin() const noexcept {
