@@ -1,7 +1,7 @@
 #pragma once
 #include <utility>
 #include <new>
-
+#include <cstddef>
 #include <iterator>
 
 template <typename Type>
@@ -63,9 +63,8 @@ class SingleLinkedList {
         }
 
         BasicIterator& operator++() noexcept {
-            if (node_ != nullptr) {
-                node_ = node_->next_node;
-            }
+            assert(node_ != nullptr);
+            node_ = node_->next_node;
             return *this;
         }
 
@@ -76,10 +75,12 @@ class SingleLinkedList {
         }
 
         [[nodiscard]] reference operator*() const noexcept {
+            assert(node_ != nullptr);
             return node_->value;
         }
 
         [[nodiscard]] pointer operator->() const noexcept {
+            assert(node_ != nullptr);
             return &node_->value;
         }
 
@@ -110,10 +111,17 @@ public:
     }
 
     Iterator InsertAfter(ConstIterator pos, const Type& value) {
-        Node* new_node = new Node(value, pos.node_->next_node);
-        pos.node_->next_node = new_node;
-        ++size_;
-        return Iterator(new_node);
+        if (pos.node_->next_node == nullptr) {
+            Node* new_node = new Node(value, nullptr);
+            pos.node_->next_node = new_node;
+            ++size_;
+            return Iterator(new_node);
+        } else {
+            Node* new_node = new Node(value, pos.node_->next_node);
+            pos.node_->next_node = new_node;
+            ++size_;
+            return Iterator(new_node);
+        }
     }
 
     [[nodiscard]] Iterator begin() noexcept {
@@ -121,15 +129,15 @@ public:
     }
 
     void PopFront() noexcept {
-        if (GetSize() > 0) {
-            Node* new_node = head_.next_node->next_node;
-            delete head_.next_node;
-            head_.next_node = new_node;
-            --size_;
-        }
+        assert(!IsEmpty());
+        Node* new_node = head_.next_node->next_node;
+        delete head_.next_node;
+        head_.next_node = new_node;
+        --size_;
     }
 
     Iterator EraseAfter(ConstIterator pos) noexcept {
+        assert(!IsEmpty());
         Node* delete_node = pos.node_->next_node;
         pos.node_->next_node = pos.node_->next_node->next_node;
         delete delete_node;
@@ -138,16 +146,11 @@ public:
     }
 
     [[nodiscard]] Iterator end() noexcept {
-        if (GetSize() > 0) {
             Node* prev_node = head_.next_node;
-            for (int i = 0; i < GetSize(); ++i) {
+            while (prev_node != nullptr) {
                 prev_node = prev_node->next_node;
-                if (prev_node == nullptr) {
-                    return Iterator(prev_node);
-                }
             }
-        }
-        return Iterator(head_.next_node);
+        return Iterator(prev_node);
     }
 
     [[nodiscard]] ConstIterator begin() const noexcept {
@@ -155,16 +158,11 @@ public:
     }
 
     [[nodiscard]] ConstIterator end() const noexcept {
-        if (GetSize() > 0) {
-            Node* prev_node = head_.next_node;
-            for (int i = 0; i < GetSize(); ++i) {
-                prev_node = prev_node->next_node;
-                if (prev_node == nullptr) {
-                    return ConstIterator(prev_node);
-                }
-            }
+        Node* prev_node = head_.next_node;
+        while (prev_node != nullptr) {
+            prev_node = prev_node->next_node;
         }
-        return ConstIterator(head_.next_node);
+        return ConstIterator(prev_node);
     }
 
     [[nodiscard]] ConstIterator cbegin() const noexcept {
@@ -201,7 +199,7 @@ public:
     }
 
     SingleLinkedList& operator=(const SingleLinkedList& rhs) {
-        if (this->head_.next_node != rhs.head_.next_node) {
+        if (this != &rhs) {
             SingleLinkedList tmp(rhs);
             swap(tmp);
         }
@@ -209,9 +207,8 @@ public:
     }
 
     void swap(SingleLinkedList& other) noexcept {
-        using std::swap;
-        swap(head_.next_node, other.head_.next_node);
-        swap(size_, other.size_);
+        std::swap(head_.next_node, other.head_.next_node);
+        std::swap(size_, other.size_);
     }
 
     void PushFront(const Type& value) {
@@ -233,7 +230,7 @@ public:
     }
 
     [[nodiscard]] bool IsEmpty() const noexcept {
-        return (!GetSize());
+        return GetSize() == 0;
     }
 
     ~SingleLinkedList() {
